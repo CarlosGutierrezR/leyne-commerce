@@ -9,3 +9,8 @@ export function setStoredCartId(cartId: string) {
   if (typeof window === "undefined") return;
   localStorage.setItem(CART_ID_KEY, cartId);
 }
+
+export function clearStoredCartId() {
+  if (typeof window === "undefined") return;
+  localStorage.removeItem(CART_ID_KEY);
+}

@@ -9,14 +9,28 @@ router.get("/products", async (_req, res) => {
       include: {
         category: true,
         variants: true,
-        images: true,
+        images: {
+          orderBy: {
+            position: "asc",
+          },
+        },
       },
       orderBy: {
         createdAt: "desc",
       },
     });
 
-    res.status(200).json(products);
+    res.status(200).json(
+      products.map((product) => ({
+        ...product,
+        images: product.images.map((image) => ({
+          id: image.id,
+          position: image.position,
+          url: image.url,
+          altText: image.alt,
+        })),
+      }))
+    );
   } catch (error) {
     console.error("Error fetching products:", error);
     res.status(500).json({

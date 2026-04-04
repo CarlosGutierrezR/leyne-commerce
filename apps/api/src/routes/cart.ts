@@ -3,6 +3,20 @@ import { prisma } from "../lib/prisma.js";
 
 const router = Router();
 
+type MutableCartResult =
+  | {
+      ok: true;
+      cart: {
+        id: string;
+        status: string;
+      };
+    }
+  | {
+      ok: false;
+      status: number;
+      error: string;
+    };
+
 /**
  * Crear carrito vacío
  */
@@ -47,7 +61,11 @@ router.get("/cart/:id", async (req, res) => {
               include: {
                 product: {
                   include: {
-                    images: true,
+                    images: {
+                      orderBy: {
+                        position: "asc",
+                      },
+                    },
                     category: true,
                   },
                 },
@@ -87,6 +105,15 @@ router.post("/cart/:id/items", async (req, res) => {
       return res.status(400).json({
         ok: false,
         error: "variantId and quantity are required",
+      });
+    }
+
+    const mutableCart = await getMutableCart(cartId);
+
+    if (!mutableCart.ok) {
+      return res.status(mutableCart.status).json({
+        ok: false,
+        error: mutableCart.error,
       });
     }
 
@@ -132,5 +159,119 @@ router.post("/cart/:id/items", async (req, res) => {
     });
   }
 });
+
+router.delete("/cart/:id/items/:itemId", async (req, res) => {
+  try {
+    const cartId = req.params.id;
+    const itemId = req.params.itemId;
+
+    const mutableCart = await getMutableCart(cartId);
+
+    if (!mutableCart.ok) {
+      return res.status(mutableCart.status).json({
+        ok: false,
+        error: mutableCart.error,
+      });
+    }
+
+    const cartItem = await prisma.cartItem.findFirst({
+      where: {
+        cartId,
+        id: itemId,
+      },
+    });
+
+    if (!cartItem) {
+      return res.status(404).json({
+        ok: false,
+        error: "Cart item not found.",
+      });
+    }
+
+    const deletedItem = await prisma.cartItem.delete({
+      where: {
+        id: cartItem.id,
+      },
+    });
+
+    return res.status(200).json({
+      ok: true,
+      message: "Cart item removed successfully.",
+      item: deletedItem,
+    });
+  } catch (error) {
+    console.error("Error removing cart item:", error);
+    return res.status(500).json({
+      ok: false,
+      error: "Failed to remove item from cart",
+    });
+  }
+});
+
+router.delete("/cart/:id/items", async (req, res) => {
+  try {
+    const cartId = req.params.id;
+    const mutableCart = await getMutableCart(cartId);
+
+    if (!mutableCart.ok) {
+      return res.status(mutableCart.status).json({
+        ok: false,
+        error: mutableCart.error,
+      });
+    }
+
+    const deletedItems = await prisma.cartItem.deleteMany({
+      where: {
+        cartId,
+      },
+    });
+
+    return res.status(200).json({
+      ok: true,
+      message: "Cart cleared successfully.",
+      cartId,
+      removedCount: deletedItems.count,
+    });
+  } catch (error) {
+    console.error("Error clearing cart:", error);
+    return res.status(500).json({
+      ok: false,
+      error: "Failed to clear cart",
+    });
+  }
+});
+
+async function getMutableCart(cartId: string): Promise<MutableCartResult> {
+  const cart = await prisma.cart.findUnique({
+    where: {
+      id: cartId,
+    },
+    select: {
+      id: true,
+      status: true,
+    },
+  });
+
+  if (!cart) {
+    return {
+      ok: false,
+      status: 404,
+      error: "Cart not found",
+    };
+  }
+
+  if (cart.status !== "active") {
+    return {
+      ok: false,
+      status: 409,
+      error: "Cart is no longer active.",
+    };
+  }
+
+  return {
+    ok: true,
+    cart,
+  };
+}
 
 export default router;

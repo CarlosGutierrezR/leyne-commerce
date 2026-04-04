@@ -84,3 +84,57 @@ model CartItem {
   @@index([cartId])
   @@index([variantId])
 }
+
+model Order {
+  id                   String      @id @default(cuid())
+  cartId               String?
+  status               String      @default("pending_payment")
+  source               String      @default("storefront")
+  customerFullName     String
+  customerEmail        String
+  customerPhone        String
+  customerReference    String?
+  deliveryAddressLine1 String
+  deliveryCity         String
+  deliveryRegion       String
+  deliveryPostalCode   String
+  deliveryCountry      String
+  deliveryNotes        String?
+  currency             String      @default("EUR")
+  itemCount            Int
+  subtotal             Decimal     @db.Decimal(10, 2)
+  shippingAmount       Decimal?    @db.Decimal(10, 2)
+  taxAmount            Decimal?    @db.Decimal(10, 2)
+  total                Decimal     @db.Decimal(10, 2)
+  stripeMode           String      @default("test")
+  stripeStatus         String      @default("pending_checkout_session")
+  stripeCheckoutSessionId        String?   @unique
+  stripeCheckoutSessionExpiresAt DateTime?
+  stripePaymentIntentId          String?
+  paidAt                         DateTime?
+  items                OrderItem[]
+  createdAt            DateTime    @default(now())
+  updatedAt            DateTime    @updatedAt
+}
+
+model OrderItem {
+  id           String   @id @default(cuid())
+  orderId      String
+  order        Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId    String
+  variantId    String
+  sku          String
+  productName  String
+  categoryName String
+  imageUrl     String?
+  size         String?
+  color        String?
+  unitPrice    Decimal  @db.Decimal(10, 2)
+  quantity     Int
+  lineTotal    Decimal  @db.Decimal(10, 2)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([orderId])
+  @@index([variantId])
+}

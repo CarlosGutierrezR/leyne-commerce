@@ -1,5 +1,8 @@
+import type { Product } from "@/features/catalog/types/product";
+import { getApiUrl } from "@/lib/api-url";
+
 export async function getProducts() {
-  const res = await fetch("http://127.0.0.1:4000/api/products", {
+  const res = await fetch(getApiUrl("/products"), {
     cache: "no-store",
   });
 
@@ -7,5 +10,11 @@ export async function getProducts() {
     throw new Error("Error fetching products");
   }
 
-  return res.json();
+  const products = await res.json();
+
+  if (!Array.isArray(products)) {
+    throw new Error("Unexpected products payload");
+  }
+
+  return products as Product[];
 }
