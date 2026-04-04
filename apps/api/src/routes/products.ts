@@ -1,0 +1,29 @@
+import { Router } from "express";
+import { prisma } from "../lib/prisma.js";
+
+const router = Router();
+
+router.get("/products", async (_req, res) => {
+  try {
+    const products = await prisma.product.findMany({
+      include: {
+        category: true,
+        variants: true,
+        images: true,
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+    });
+
+    res.status(200).json(products);
+  } catch (error) {
+    console.error("Error fetching products:", error);
+    res.status(500).json({
+      ok: false,
+      error: "Failed to fetch products",
+    });
+  }
+});
+
+export default router;
