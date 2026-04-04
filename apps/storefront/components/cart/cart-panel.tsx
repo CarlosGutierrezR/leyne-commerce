@@ -2,6 +2,9 @@
 
 import { useEffect, useState } from "react";
 import { useCartStore } from "@/features/cart/store/cart-store";
+import { getStoredCartId } from "@/features/cart/store/cart-id";
+
+import { removeItemFromCart } from "@/features/cart/api/cart-api";
 
 export function CartPanel() {
   const [open, setOpen] = useState(false);
@@ -24,6 +27,42 @@ export function CartPanel() {
       </button>
     );
   }
+
+  const handleRemove = async (item: any) => {
+    try {
+      console.log("REMOVE item =>", item);
+
+      const cartId = getStoredCartId();
+      console.log("REMOVE cartId =>", cartId);
+
+      if (cartId && item.cartItemId) {
+        await removeItemFromCart(cartId, item.cartItemId);
+      }
+
+      removeItem(item.variantId);
+    } catch (error) {
+      console.error("Error removing item:", error);
+    }
+  };
+
+const handleClear = async () => {
+  try {
+    const cartId = getStoredCartId();
+    console.log("CLEAR cartId =>", cartId);
+
+    if (cartId) {
+      const cart = await fetch(`http://localhost:4000/api/cart/${cartId}`).then(res => res.json());
+
+      for (const item of cart.items) {
+        await removeItemFromCart(cartId, item.id);
+      }
+    }
+
+    clearCart();
+  } catch (error) {
+    console.error("Error clearing cart:", error);
+  }
+};
 
   return (
     <>
@@ -78,7 +117,7 @@ export function CartPanel() {
                     </div>
 
                     <button
-                      onClick={() => removeItem(item.variantId)}
+                      onClick={() => handleRemove(item)}
                       className="mt-3 text-sm text-red-400 hover:text-red-300"
                     >
                       Eliminar
@@ -99,7 +138,7 @@ export function CartPanel() {
                 </div>
 
                 <button
-                  onClick={clearCart}
+                  onClick={handleClear}
                   className="w-full rounded-xl border border-neutral-700 px-4 py-3 text-sm hover:bg-neutral-900"
                 >
                   Vaciar carrito

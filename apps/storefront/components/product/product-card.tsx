@@ -1,30 +1,55 @@
 "use client";
 
+import { useState } from "react";
 import { useCartStore } from "@/features/cart/store/cart-store";
+import { createCart, addItemToCart } from "@/features/cart/api/cart-api";
+import { getStoredCartId, setStoredCartId } from "@/features/cart/store/cart-id";
 
 type Props = {
   product: any;
 };
 
 export function ProductCard({ product }: Props) {
+  const [loading, setLoading] = useState(false);
   const addItem = useCartStore((state) => state.addItem);
+
   const variant =
     product.variants.find((v: any) => v.isDefault) ?? product.variants[0];
 
-  const handleAddToCart = () => {
+  const handleAddToCart = async () => {
     if (!variant) return;
 
-    addItem({
-      variantId: variant.id,
-      productId: product.id,
-      name: product.name,
-      categoryName: product.category.name,
-      imageUrl: product.images[0]?.url,
-      price: Number(variant.price),
-      size: variant.size,
-      color: variant.color,
-      sku: variant.sku,
-    });
+    try {
+      setLoading(true);
+
+      let cartId = getStoredCartId();
+
+      if (!cartId) {
+        const cart = await createCart();
+        cartId = cart.id;
+        setStoredCartId(cartId);
+      }
+
+      await addItemToCart(cartId, variant.id, 1);
+
+      addItem({
+        variantId: variant.id,
+        productId: product.id,
+        name: product.name,
+        categoryName: product.category.name,
+        imageUrl: product.images[0]?.url,
+        price: Number(variant.price),
+        quantity: 1,
+        size: variant.size,
+        color: variant.color,
+        sku: variant.sku,
+      });
+    } catch (error) {
+      console.error("Error syncing cart:", error);
+      alert("No se pudo añadir el producto al carrito");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -50,9 +75,10 @@ export function ProductCard({ product }: Props) {
 
         <button
           onClick={handleAddToCart}
-          className="mt-4 w-full rounded-xl bg-white px-4 py-3 text-sm font-medium text-black transition hover:opacity-90"
+          disabled={loading}
+          className="mt-4 w-full rounded-xl bg-white px-4 py-3 text-sm font-medium text-black transition hover:opacity-90 disabled:opacity-50"
         >
-          Añadir al carrito
+          {loading ? "Añadiendo..." : "Añadir al carrito"}
         </button>
       </div>
     </div>

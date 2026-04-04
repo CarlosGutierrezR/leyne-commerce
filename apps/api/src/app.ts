@@ -1,6 +1,7 @@
 import express from "express";
 import cors from "cors";
 import productsRouter from "./routes/products.js";
+import cartRouter from "./routes/cart.js";
 
 export const app = express();
 
@@ -15,3 +16,4 @@ app.get("/health", (_req, res) => {
 });
 
 app.use("/api", productsRouter);
+app.use("/api", cartRouter);
