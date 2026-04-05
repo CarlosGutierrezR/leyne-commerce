@@ -1,8 +1,12 @@
 import { Router } from "express";
+import Stripe from "stripe";
 import { prisma } from "../lib/prisma.js";
 import {
+  assertStripeCheckoutConfiguration,
   buildStripeCheckoutUrls,
   getStripeClient,
+  getRequiredStripeCheckoutEnvVars,
+  isStripeConfigurationError,
 } from "../lib/stripe.js";
 
 const router = Router();
@@ -51,6 +55,12 @@ type ParsedCheckoutPayload = {
     region: string;
   };
   source: string;
+};
+
+type StripeSdkError = Error & {
+  code?: string;
+  requestId?: string | null;
+  type: string;
 };
 
 router.post("/orders", async (req, res) => {
@@ -258,6 +268,8 @@ router.post("/orders/:id/checkout-session", async (req, res) => {
       });
     }
 
+    assertStripeCheckoutConfiguration();
+
     const stripe = getStripeClient();
     const { cancelUrl, successUrl } = buildStripeCheckoutUrls(order.id);
 
@@ -343,14 +355,31 @@ router.post("/orders/:id/checkout-session", async (req, res) => {
       });
     }
 
-    if (
-      error instanceof Error &&
-      (error.message === "STRIPE_SECRET_KEY is not configured." ||
-        error.message === "STOREFRONT_URL is not configured.")
-    ) {
+    if (isStripeConfigurationError(error)) {
       return res.status(500).json({
         ok: false,
         error: error.message,
+        code: error.code,
+        diagnostic: {
+          action: error.action,
+          invalidEnvVars: error.invalidEnvVars,
+          missingEnvVars: error.missingEnvVars,
+          requiredEnvVars: getRequiredStripeCheckoutEnvVars(),
+          sourceOfTruth: "stripe_webhook",
+        },
+      });
+    }
+
+    if (error instanceof Stripe.errors.StripeError) {
+      return res.status(502).json({
+        ok: false,
+        error: buildStripeApiErrorMessage(error),
+        code: "STRIPE_API_ERROR",
+        diagnostic: {
+          requestId: error.requestId ?? null,
+          stripeCode: error.code ?? null,
+          stripeType: error.type ?? null,
+        },
       });
     }
 
@@ -488,6 +517,22 @@ function parseCheckoutOrderPayload(
         : "storefront",
     },
   };
+}
+
+function buildStripeApiErrorMessage(error: StripeSdkError) {
+  if (error.type === "StripeAuthenticationError") {
+    return "Stripe rechazo la credencial configurada en STRIPE_SECRET_KEY. Revisa que la clave test sea valida en apps/api.";
+  }
+
+  if (error.type === "StripeAPIConnectionError") {
+    return "No se pudo conectar con Stripe desde apps/api al crear la Checkout Session test.";
+  }
+
+  if (error.type === "StripeInvalidRequestError") {
+    return `Stripe rechazo la solicitud de Checkout Session test: ${error.message}`;
+  }
+
+  return `Stripe devolvio un error al crear la Checkout Session test: ${error.message}`;
 }
 
 function buildOrderItemDescription(item: {

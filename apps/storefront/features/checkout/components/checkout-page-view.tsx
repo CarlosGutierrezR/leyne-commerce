@@ -442,7 +442,7 @@ function getStripeReturnBanner({
       orderId ?? "desconocida"
     }, pero el estado real actual en backend sigue siendo ${
       order?.status ?? "pendiente"
-    }. Aun estamos esperando o revisando la confirmacion final por webhook.`,
+    }. Aun estamos esperando o revisando la confirmacion final por webhook. Si esto persiste, revisa STRIPE_WEBHOOK_SECRET en apps/api y el envio real de eventos hacia /api/stripe/webhook.`,
     title: "Pago en verificacion",
     tone: "neutral" as const,
   };

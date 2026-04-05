@@ -380,14 +380,14 @@ function CheckoutConfirmationPageContent() {
 
   return (
     <ConfirmationShell>
-      <StateCard
-        eyebrow="Verificacion en curso"
-        title="Estamos confirmando tu pedido"
-        description={`Stripe ya devolvio el flujo al storefront para la orden ${order.id}, pero el estado real actual sigue en ${order.status}. Esta pantalla espera la confirmacion final del webhook antes de cerrar el carrito.`}
-        actions={[
-          {
-            href: `/checkout/confirmado?stripe=${encodeURIComponent(
-              stripeReturnStatus ?? "success"
+        <StateCard
+          eyebrow="Verificacion en curso"
+          title="Estamos confirmando tu pedido"
+          description={`Stripe ya devolvio el flujo al storefront para la orden ${order.id}, pero el estado real actual sigue en ${order.status}. Esta pantalla espera la confirmacion final del webhook antes de cerrar el carrito. Si se queda asi, revisa STRIPE_WEBHOOK_SECRET en apps/api y confirma que Stripe este enviando eventos a /api/stripe/webhook.`}
+          actions={[
+            {
+              href: `/checkout/confirmado?stripe=${encodeURIComponent(
+                stripeReturnStatus ?? "success"
             )}&orderId=${encodeURIComponent(order.id)}${
               sessionId
                 ? `&session_id=${encodeURIComponent(sessionId)}`

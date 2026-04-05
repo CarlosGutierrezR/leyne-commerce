@@ -34,8 +34,8 @@ export function HomeHero({
           Una portada boutique lista para crecer como catalogo real.
         </h1>
         <p className="mt-6 max-w-2xl text-base leading-8 text-stone-300 sm:text-lg">
-          La home ya combina compra directa, capas visuales de coleccion y una
-          biblioteca de assets canonica para preparar la siguiente etapa del e-commerce.
+          La home ya combina compra directa con colecciones reales derivadas del
+          backend para que la narrativa editorial y el catalogo transaccional hablen del mismo inventario.
         </p>
 
         <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
@@ -53,7 +53,7 @@ export function HomeHero({
           </Link>
           <p className="text-sm leading-7 text-stone-400">
             {totalProducts} productos visibles, {totalCategories} categorias activas
-            y {totalCollections} colecciones visuales listas para crecer.
+            y {totalCollections} colecciones reales conectadas.
           </p>
         </div>
       </div>
@@ -93,7 +93,7 @@ export function HomeHero({
             </div>
             <div className="rounded-[1.5rem] bg-black/15 p-4">
               <p className="text-3xl font-semibold text-stone-50">{totalCollections}</p>
-              <p className="mt-2 text-sm text-stone-300">colecciones visuales</p>
+              <p className="mt-2 text-sm text-stone-300">colecciones reales</p>
             </div>
           </div>
         </article>

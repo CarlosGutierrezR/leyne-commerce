@@ -1,5 +1,5 @@
 import { CartPanel } from "@/features/cart/components/cart-panel";
-import { catalogCollections } from "@/features/catalog/content/catalog-showcase";
+import { getCatalogCollectionRecords } from "@/features/catalog/content/catalog-showcase";
 import type { Product } from "@/features/catalog/types/product";
 import { HomeCatalogDiscovery } from "@/features/home/components/home-catalog-discovery";
 import { HomeCatalogSection } from "@/features/home/components/home-catalog-section";
@@ -15,6 +15,7 @@ export function StorefrontHome({ products }: StorefrontHomeProps) {
   const categoryNames = Array.from(
     new Set(products.map((product) => product.category.name))
   );
+  const collectionCount = getCatalogCollectionRecords(products).length;
 
   return (
     <main className="relative min-h-screen overflow-hidden text-white">
@@ -27,14 +28,14 @@ export function StorefrontHome({ products }: StorefrontHomeProps) {
         <HomeHero
           totalProducts={products.length}
           totalCategories={categoryNames.length}
-          totalCollections={catalogCollections.length}
+          totalCollections={collectionCount}
         />
         <HomeCatalogDiscovery products={products} />
         <HomeFeaturedProducts products={featuredProducts} />
         <HomeCatalogSection
           products={products}
           categoryNames={categoryNames}
-          collectionCount={catalogCollections.length}
+          collectionCount={collectionCount}
         />
       </div>
     </main>

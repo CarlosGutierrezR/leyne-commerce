@@ -1,9 +1,13 @@
 import Link from "next/link";
 import {
   catalogBrandMark,
-  catalogCollections,
+  getCatalogCollectionRecords,
   getCatalogCategoryShowcases,
 } from "@/features/catalog/content/catalog-showcase";
+import {
+  getProductCategorySlug,
+  getProductHref,
+} from "@/features/catalog/lib/product-helpers";
 import type { Product } from "@/features/catalog/types/product";
 import { formatPrice } from "@/lib/format-price";
 
@@ -15,6 +19,7 @@ export function HomeCatalogDiscovery({
   products,
 }: HomeCatalogDiscoveryProps) {
   const categoryShowcases = getCatalogCategoryShowcases(products);
+  const collectionRecords = getCatalogCollectionRecords(products);
   const primaryCategory = categoryShowcases[0] ?? null;
 
   return (
@@ -30,9 +35,9 @@ export function HomeCatalogDiscovery({
         </div>
 
         <p className="max-w-xl text-sm leading-7 text-stone-300 sm:text-right">
-          Las categorias ya navegan a rutas reales. Las colecciones siguen siendo
-          una capa visual curada y, mientras no tengan ruta propia, conducen de
-          forma explicita al catalogo general.
+          Las categorias y las colecciones ya se resuelven desde el backend.
+          Cuando una coleccion no tiene ruta propia, la UI navega hacia un
+          producto real o hacia su categoria activa sin prometer mas de lo que existe.
         </p>
       </div>
 
@@ -94,10 +99,10 @@ export function HomeCatalogDiscovery({
                   </div>
                   <div className="rounded-[1.5rem] border border-white/10 bg-black/20 p-4">
                     <p className="text-2xl font-semibold text-stone-50">
-                      {catalogCollections.length}
+                      {collectionRecords.length}
                     </p>
                     <p className="mt-2 text-xs uppercase tracking-[0.2em] text-stone-300">
-                      colecciones visuales
+                      colecciones reales
                     </p>
                   </div>
                 </div>
@@ -125,49 +130,97 @@ export function HomeCatalogDiscovery({
         ) : null}
 
         <div className="grid gap-4 sm:grid-cols-2">
-          {catalogCollections.map((collection) => (
-            <article
-              key={collection.slug}
-              className="group relative overflow-hidden rounded-[2rem] border border-white/10 bg-black/20 min-h-[15rem] shadow-[0_18px_60px_rgba(0,0,0,0.22)]"
-            >
-              <div
-                className="absolute inset-0 bg-cover bg-center transition duration-700 group-hover:scale-105"
-                style={{ backgroundImage: `url('${collection.imageSrc}')` }}
-              />
-              <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(10,8,7,0.1),rgba(10,8,7,0.65)_58%,rgba(10,8,7,0.88)_100%)]" />
+          {collectionRecords.map((collection) => {
+            const href = getCollectionHref(collection.products);
+            const ctaLabel = getCollectionCtaLabel(collection.products.length);
+            const categoryName =
+              collection.products[0]?.category.name ?? "Catalogo";
 
-              <div className="relative flex h-full flex-col justify-between p-5">
-                <div className="flex items-center justify-between gap-3">
-                  <span className="rounded-full border border-white/15 bg-black/20 px-3 py-1 text-[11px] uppercase tracking-[0.22em] text-stone-200">
-                    {collection.line}
-                  </span>
-                  <span className="text-[11px] uppercase tracking-[0.22em] text-stone-300">
-                    {collection.assetCount} assets
-                  </span>
-                </div>
+            return (
+              <article
+                key={collection.slug}
+                className="group relative min-h-[15rem] overflow-hidden rounded-[2rem] border border-white/10 bg-black/20 shadow-[0_18px_60px_rgba(0,0,0,0.22)]"
+              >
+                <div
+                  className="absolute inset-0 bg-cover bg-center transition duration-700 group-hover:scale-105"
+                  style={{ backgroundImage: `url('${collection.imageSrc}')` }}
+                />
+                <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(10,8,7,0.1),rgba(10,8,7,0.65)_58%,rgba(10,8,7,0.88)_100%)]" />
 
-                <div>
-                  <h3 className="text-2xl font-semibold text-stone-50">
-                    {collection.title}
-                  </h3>
-                  <p className="mt-3 text-sm leading-7 text-stone-200">
-                    {collection.description}
-                  </p>
-                  <Link
-                    href="/catalogo"
-                    className="mt-4 inline-flex text-sm font-medium uppercase tracking-[0.16em] text-stone-100 transition hover:text-[rgba(212,177,138,1)]"
-                  >
-                    Ir al catalogo general
-                  </Link>
-                  <p className="mt-2 text-xs uppercase tracking-[0.18em] text-stone-400">
-                    Ruta propia de coleccion pendiente
-                  </p>
+                <div className="relative flex h-full flex-col justify-between p-5">
+                  <div className="flex items-center justify-between gap-3">
+                    <span className="rounded-full border border-white/15 bg-black/20 px-3 py-1 text-[11px] uppercase tracking-[0.22em] text-stone-200">
+                      {collection.lineName ?? categoryName}
+                    </span>
+                    <span className="text-[11px] uppercase tracking-[0.22em] text-stone-300">
+                      {collection.productCount} producto
+                      {collection.productCount === 1 ? "" : "s"}
+                    </span>
+                  </div>
+
+                  <div>
+                    <h3 className="text-2xl font-semibold text-stone-50">
+                      {collection.title}
+                    </h3>
+                    <p className="mt-3 text-sm leading-7 text-stone-200">
+                      {collection.description}
+                    </p>
+                    <div className="mt-4 flex flex-wrap items-center gap-3">
+                      <span className="rounded-full border border-white/10 bg-black/15 px-3 py-2 text-sm text-stone-100">
+                        Desde{" "}
+                        <span className="font-semibold">
+                          {collection.startingPrice !== null
+                            ? formatPrice(collection.startingPrice)
+                            : "-"}
+                        </span>
+                      </span>
+                      <span className="text-xs uppercase tracking-[0.18em] text-stone-300">
+                        Disponible dentro de {categoryName}
+                      </span>
+                    </div>
+                    <Link
+                      href={href}
+                      className="mt-4 inline-flex text-sm font-medium uppercase tracking-[0.16em] text-stone-100 transition hover:text-[rgba(212,177,138,1)]"
+                    >
+                      {ctaLabel}
+                    </Link>
+                    <p className="mt-2 text-xs uppercase tracking-[0.18em] text-stone-400">
+                      {getCollectionSupportText(
+                        collection.products.length,
+                        categoryName
+                      )}
+                    </p>
+                  </div>
                 </div>
-              </div>
-            </article>
-          ))}
+              </article>
+            );
+          })}
         </div>
       </div>
     </section>
   );
+}
+
+function getCollectionHref(products: Product[]) {
+  const firstProduct = products[0];
+
+  if (!firstProduct) {
+    return "/catalogo";
+  }
+
+  if (products.length === 1) {
+    return getProductHref(firstProduct);
+  }
+
+  return `/catalogo/${getProductCategorySlug(firstProduct)}`;
+}
+
+function getCollectionCtaLabel(productCount: number) {
+  return productCount === 1 ? "Ver producto real" : "Explorar en catalogo";
+}
+
+function getCollectionSupportText(productCount: number, categoryName: string) {
+  return productCount === 1
+    ? `Entrada directa a la ficha activa en ${categoryName}`
+    : `Coleccion disponible dentro de ${categoryName}`;
 }

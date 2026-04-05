@@ -12,6 +12,14 @@ export type ProductCategory = {
   slug?: string;
 };
 
+export type ProductCollection = {
+  id?: string;
+  name: string;
+  slug?: string;
+  description?: string | null;
+  lineName?: string | null;
+};
+
 export type ProductVariant = {
   id: string;
   price: number | string;
@@ -27,6 +35,7 @@ export type Product = {
   slug?: string;
   description?: string | null;
   category: ProductCategory;
+  collection?: ProductCollection | null;
   images: ProductImage[];
   variants: ProductVariant[];
 };

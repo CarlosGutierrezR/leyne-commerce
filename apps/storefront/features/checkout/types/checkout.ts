@@ -146,6 +146,21 @@ export type CreateStripeCheckoutSessionResponse = {
   };
 };
 
+export type CheckoutApiErrorResponse = {
+  code?: string;
+  diagnostic?: {
+    action?: string;
+    invalidEnvVars?: string[];
+    missingEnvVars?: string[];
+    requestId?: string | null;
+    requiredEnvVars?: string[];
+    sourceOfTruth?: string;
+    stripeCode?: string | null;
+    stripeType?: string | null;
+  };
+  error?: string;
+};
+
 export type GetOrderStatusResponse = {
   integration: {
     sourceOfTruth: "stripe_webhook";

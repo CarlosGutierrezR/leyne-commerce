@@ -5,6 +5,12 @@
   --foreground: #f7f1ea;
   --muted: #c7b8aa;
   --accent: #d4b18a;
+  --font-sans-base:
+    "Segoe UI", "Avenir Next", Avenir, "Helvetica Neue", Helvetica, Arial,
+    sans-serif;
+  --font-mono-base:
+    "SFMono-Regular", "Cascadia Code", Consolas, "Liberation Mono", Menlo,
+    monospace;
 }
 
 @theme inline {
@@ -12,8 +18,8 @@
   --color-foreground: var(--foreground);
   --color-muted: var(--muted);
   --color-accent: var(--accent);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--font-sans-base);
+  --font-mono: var(--font-mono-base);
 }
 
 * {
@@ -31,7 +37,7 @@ body {
     radial-gradient(circle at bottom left, rgba(255, 255, 255, 0.06), transparent 30%),
     linear-gradient(180deg, #211816 0%, #140f0d 52%, #0d0908 100%);
   color: var(--foreground);
-  font-family: var(--font-geist-sans), sans-serif;
+  font-family: var(--font-sans-base);
 }
 
 a {

@@ -1,14 +1,15 @@
 import type { Product } from "@/features/catalog/types/product";
 
-export type CatalogCollection = {
+export type CatalogCollectionRecord = {
   slug: string;
   title: string;
-  line: string;
   description: string;
+  lineName: string | null;
   imageSrc: string;
   imageAlt: string;
-  assetCount: number;
-  sourceFolder: string;
+  productCount: number;
+  startingPrice: number | null;
+  products: Product[];
 };
 
 export type CatalogCategoryShowcase = {
@@ -46,73 +47,58 @@ export const catalogBrandMark = {
   alt: "Leyne Confort Care",
 };
 
-export const catalogCollections: CatalogCollection[] = [
-  {
-    slug: "fantastic",
-    title: "Fantastic",
-    line: "Linea Satin",
-    description: "Capsula visual base para una lectura suave y continua del catalogo.",
-    imageSrc: "/images/catalog/collections/satin/fantastic/cover.png",
-    imageAlt: "Coleccion Fantastic de linea satin",
-    assetCount: 16,
-    sourceFolder: "public/images/LINEA SATIN/FANTASTIC",
-  },
-  {
-    slug: "fantastic-premium",
-    title: "Fantastic Premium",
-    line: "Linea Satin",
-    description:
-      "Variante premium preparada para destacar producto, detalle textil y narrativa visual.",
-    imageSrc: "/images/catalog/collections/satin/fantastic-premium/cover.png",
-    imageAlt: "Coleccion Fantastic Premium de linea satin",
-    assetCount: 10,
-    sourceFolder: "public/images/LINEA SATIN/FANTASTIC PREMIUM",
-  },
-  {
-    slug: "primavera",
-    title: "Primavera",
-    line: "Linea Satin",
-    description:
-      "Entrada editorial para una coleccion ligera y facil de ordenar por estilos y variantes.",
-    imageSrc: "/images/catalog/collections/satin/primavera/cover.png",
-    imageAlt: "Coleccion Primavera de linea satin",
-    assetCount: 8,
-    sourceFolder: "public/images/LINEA SATIN/PRIMAVERA",
-  },
-  {
-    slug: "primavera-deluxe",
-    title: "Primavera Deluxe",
-    line: "Linea Satin",
-    description:
-      "Biblioteca visual amplia para fichas mas completas y una futura vista de coleccion.",
-    imageSrc: "/images/catalog/collections/satin/primavera-deluxe/cover.png",
-    imageAlt: "Coleccion Primavera Deluxe de linea satin",
-    assetCount: 12,
-    sourceFolder: "public/images/LINEA SATIN/PRIMAVERA DELUXE",
-  },
-  {
-    slug: "sensualidad",
-    title: "Sensualidad",
-    line: "Linea Satin",
-    description:
-      "Coleccion lista para una navegacion mas emocional dentro de la home y del catalogo.",
-    imageSrc: "/images/catalog/collections/satin/sensualidad/cover.png",
-    imageAlt: "Coleccion Sensualidad de linea satin",
-    assetCount: 11,
-    sourceFolder: "public/images/LINEA SATIN/SENSUALIDAD",
-  },
-  {
-    slug: "sensualidad-gold",
-    title: "Sensualidad Gold",
-    line: "Linea Satin",
-    description:
-      "Variacion con tono premium lista para crecer hacia un escaparate mas aspiracional.",
-    imageSrc: "/images/catalog/collections/satin/sensualidad-gold/cover.png",
-    imageAlt: "Coleccion Sensualidad Gold de linea satin",
-    assetCount: 11,
-    sourceFolder: "public/images/LINEA SATIN/SENSUALIDAD GOLD",
-  },
-];
+export function getCatalogCollectionRecords(
+  products: Product[]
+): CatalogCollectionRecord[] {
+  const groupedProducts = new Map<string, Product[]>();
+
+  for (const product of products) {
+    const collection = product.collection;
+
+    if (!collection) {
+      continue;
+    }
+
+    const slug = normalizeCatalogCollectionSlug(
+      collection.slug ?? collection.name
+    );
+    const collectionProducts = groupedProducts.get(slug) ?? [];
+    collectionProducts.push(product);
+    groupedProducts.set(slug, collectionProducts);
+  }
+
+  return Array.from(groupedProducts.entries())
+    .map(([slug, collectionProducts]) => {
+      const firstProduct = collectionProducts[0];
+      const collection = firstProduct?.collection;
+      const firstImage = firstProduct?.images[0];
+
+      return {
+        slug,
+        title: collection?.name ?? firstProduct?.name ?? slug,
+        description:
+          collection?.description ??
+          "Coleccion real conectada al backend y disponible dentro del catalogo activo.",
+        lineName: collection?.lineName ?? null,
+        imageSrc: firstImage?.url ?? "/images/pijama1.jpg",
+        imageAlt:
+          firstImage?.altText ??
+          collection?.name ??
+          firstProduct?.name ??
+          "Coleccion activa",
+        productCount: collectionProducts.length,
+        startingPrice: getStartingPrice(collectionProducts),
+        products: collectionProducts,
+      };
+    })
+    .sort((left, right) => {
+      if (right.productCount !== left.productCount) {
+        return right.productCount - left.productCount;
+      }
+
+      return left.title.localeCompare(right.title, "es");
+    });
+}
 
 export function getCatalogCategoryShowcases(
   products: Product[]
@@ -190,6 +176,14 @@ function getStartingPrice(products: Product[]) {
 }
 
 export function normalizeCatalogCategorySlug(value: string) {
+  return normalizeCatalogSlug(value);
+}
+
+export function normalizeCatalogCollectionSlug(value: string) {
+  return normalizeCatalogSlug(value);
+}
+
+function normalizeCatalogSlug(value: string) {
   return value
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")

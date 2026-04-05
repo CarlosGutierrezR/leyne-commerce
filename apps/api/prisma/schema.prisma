@@ -16,6 +16,17 @@ model Category {
   updatedAt DateTime  @updatedAt
 }
 
+model Collection {
+  id          String    @id @default(cuid())
+  name        String    @unique
+  slug        String    @unique
+  description String?
+  lineName    String?
+  products    Product[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
 model Product {
   id          String           @id @default(cuid())
   name        String
@@ -24,12 +35,15 @@ model Product {
   isActive    Boolean          @default(true)
   categoryId  String
   category    Category         @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  collectionId String?
+  collection  Collection?      @relation(fields: [collectionId], references: [id], onDelete: SetNull)
   variants    ProductVariant[]
   images      ProductImage[]
   createdAt   DateTime         @default(now())
   updatedAt   DateTime         @updatedAt
 
   @@index([categoryId])
+  @@index([collectionId])
 }
 
 model ProductVariant {

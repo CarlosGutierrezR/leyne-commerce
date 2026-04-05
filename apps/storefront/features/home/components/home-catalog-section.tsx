@@ -48,7 +48,7 @@ export function HomeCatalogSection({
             </span>
           ))}
           <span className="rounded-full border border-[rgba(212,177,138,0.22)] bg-[rgba(212,177,138,0.08)] px-3 py-1 text-xs uppercase tracking-[0.18em] text-stone-200">
-            {collectionCount} colecciones visuales
+            {collectionCount} colecciones reales
           </span>
         </div>
       </div>

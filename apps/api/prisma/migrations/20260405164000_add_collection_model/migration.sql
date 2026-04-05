@@ -1,0 +1,27 @@
+-- CreateTable
+CREATE TABLE "Collection" (
+    "id" TEXT NOT NULL,
+    "name" TEXT NOT NULL,
+    "slug" TEXT NOT NULL,
+    "description" TEXT,
+    "lineName" TEXT,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "Collection_pkey" PRIMARY KEY ("id")
+);
+
+-- AlterTable
+ALTER TABLE "Product" ADD COLUMN "collectionId" TEXT;
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Collection_name_key" ON "Collection"("name");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Collection_slug_key" ON "Collection"("slug");
+
+-- CreateIndex
+CREATE INDEX "Product_collectionId_idx" ON "Product"("collectionId");
+
+-- AddForeignKey
+ALTER TABLE "Product" ADD CONSTRAINT "Product_collectionId_fkey" FOREIGN KEY ("collectionId") REFERENCES "Collection"("id") ON DELETE SET NULL ON UPDATE CASCADE;

@@ -3,6 +3,7 @@ import type Stripe from "stripe";
 import { prisma } from "../lib/prisma.js";
 import {
   getStripeClient,
+  isStripeConfigurationError,
   getStripeWebhookSecret,
 } from "../lib/stripe.js";
 
@@ -64,6 +65,20 @@ export async function handleStripeWebhook(req: Request, res: Response) {
     return res.status(200).json({ received: true });
   } catch (error) {
     console.error("Stripe webhook error:", error);
+
+    if (isStripeConfigurationError(error)) {
+      return res.status(500).json({
+        ok: false,
+        code: error.code,
+        error: error.message,
+        diagnostic: {
+          action: error.action,
+          invalidEnvVars: error.invalidEnvVars,
+          missingEnvVars: error.missingEnvVars,
+          sourceOfTruth: "stripe_webhook",
+        },
+      });
+    }
 
     return res.status(400).send(
       error instanceof Error ? error.message : "Invalid Stripe webhook."
@@ -141,6 +156,10 @@ async function updateOrderFromSession(
       data: {
         paidAt: typeof data.paidAt === "undefined" ? undefined : data.paidAt,
         status: data.status,
+        stripeCheckoutSessionExpiresAt: session.expires_at
+          ? new Date(session.expires_at * 1000)
+          : undefined,
+        stripeCheckoutSessionId: session.id,
         stripePaymentIntentId:
           typeof data.stripePaymentIntentId === "undefined"
             ? undefined

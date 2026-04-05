@@ -47,6 +47,11 @@ export { Prisma }
  */
 export type Category = Prisma.CategoryModel
 /**
+ * Model Collection
+ * 
+ */
+export type Collection = Prisma.CollectionModel
+/**
  * Model Product
  * 
  */

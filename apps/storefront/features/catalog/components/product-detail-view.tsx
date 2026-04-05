@@ -1,9 +1,9 @@
 import Link from "next/link";
 import { CartPanel } from "@/features/cart/components/cart-panel";
 import { AddToCartButton } from "@/features/cart/components/add-to-cart-button";
+import { ProductGallery } from "@/features/catalog/components/product-gallery";
 import {
   getProductCategorySlug,
-  getProductGalleryImages,
   getProductHref,
   getProductPrimaryImage,
   getProductPrimaryImageAlt,
@@ -12,7 +12,6 @@ import {
   getProductDefaultVariant,
   type Product,
 } from "@/features/catalog/types/product";
-import { getStorefrontImageRecordAltText } from "@/lib/storefront-image";
 import { StorefrontImage } from "@/lib/storefront-image-element";
 import { formatPrice } from "@/lib/format-price";
 
@@ -26,10 +25,7 @@ export function ProductDetailView({
   relatedProducts,
 }: ProductDetailViewProps) {
   const defaultVariant = getProductDefaultVariant(product);
-  const imageUrl = getProductPrimaryImage(product);
-  const imageAlt = getProductPrimaryImageAlt(product);
   const categorySlug = getProductCategorySlug(product);
-  const galleryImages = getProductGalleryImages(product);
 
   return (
     <main className="relative min-h-screen overflow-hidden text-white">
@@ -60,41 +56,7 @@ export function ProductDetailView({
               <span className="text-stone-200">{product.name}</span>
             </div>
 
-            <div className="overflow-hidden rounded-[2.5rem] border border-white/10 bg-black/20 shadow-[0_28px_100px_rgba(0,0,0,0.28)]">
-              <div className="relative aspect-[4/5] overflow-hidden bg-stone-950">
-                <StorefrontImage
-                  src={imageUrl}
-                  alt={imageAlt}
-                  fallbackAlt={product.name}
-                  className="h-full w-full object-cover"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
-                <span className="absolute left-5 top-5 rounded-full border border-white/15 bg-black/25 px-4 py-2 text-xs uppercase tracking-[0.24em] text-stone-100">
-                  {product.category.name}
-                </span>
-              </div>
-            </div>
-
-            <div className="grid gap-3 sm:grid-cols-3">
-              {galleryImages.map((image, index) => (
-                <div
-                  key={`${image.url}-${index}`}
-                  className="overflow-hidden rounded-[1.5rem] border border-white/10 bg-white/[0.04]"
-                >
-                  <div className="aspect-[4/3] overflow-hidden">
-                    <StorefrontImage
-                      src={image.url || imageUrl}
-                      alt={getStorefrontImageRecordAltText(
-                        image,
-                        `${product.name} vista ${index + 1}`
-                      )}
-                      fallbackAlt={`${product.name} vista ${index + 1}`}
-                      className="h-full w-full object-cover"
-                    />
-                  </div>
-                </div>
-              ))}
-            </div>
+            <ProductGallery product={product} />
           </div>
 
           <div className="space-y-6">
